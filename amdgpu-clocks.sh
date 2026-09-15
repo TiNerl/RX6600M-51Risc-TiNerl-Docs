@@ -1,23 +1,23 @@
 #!/bin/bash
 # Acorda a GPU do suspend
-echo "on" > /sys/bus/pci/devices/0000:03:00.0/power/control
+echo "on" | sudo tee /sys/bus/pci/devices/0000:03:00.0/power/control > /dev/null
 sleep 5
 
 # Modo manual (permite alteração dos valores a seguir)
-echo manual > /sys/class/drm/card0/device/power_dpm_force_performance_level
+echo "manual" | sudo tee /sys/class/drm/card1/device/power_dpm_force_performance_level > /dev/null
 
-# SCLK: mínimo 500MHz, máximo 2300MHz (padrao esperado deveeria ser 2450, reduzido por estabilidade)
-echo "s 0 500" > /sys/class/drm/card0/device/pp_od_clk_voltage
-echo "s 1 2300" > /sys/class/drm/card0/device/pp_od_clk_voltage
+# SCLK: mínimo 500MHz, máximo 2300MHz
+echo "s 0 500" | sudo tee /sys/class/drm/card1/device/pp_od_clk_voltage > /dev/null
+echo "s 1 2300" | sudo tee /sys/class/drm/card1/device/pp_od_clk_voltage > /dev/null
 
 # MCLK: 1750MHz conforme .mpt
-echo "m 1 1750" > /sys/class/drm/card0/device/pp_od_clk_voltage
+echo "m 1 1750" | sudo tee /sys/class/drm/card1/device/pp_od_clk_voltage > /dev/null
 
 # Aplica as configurações
-echo "c" > /sys/class/drm/card0/device/pp_od_clk_voltage
+echo "c" | sudo tee /sys/class/drm/card1/device/pp_od_clk_voltage > /dev/null
 
 # Força nível máximo
-echo "1" > /sys/class/drm/card0/device/pp_dpm_sclk
+echo "1" | sudo tee /sys/class/drm/card1/device/pp_dpm_sclk > /dev/null
 
 # Mantém GPU acordada
-echo "on" > /sys/bus/pci/devices/0000:03:00.0/power/control
+echo "on" | sudo tee /sys/bus/pci/devices/0000:03:00.0/power/control > /dev/null

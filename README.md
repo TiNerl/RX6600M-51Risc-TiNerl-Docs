@@ -17,6 +17,15 @@ O repositório reúne:
 
 ---
 
+## A fazer
+
+1. Ler as informações contidas no arquivo .mpt e traduzi-las para markdown.
+2. Reorganizar a estrutura do README.
+3. Atualizar o script shell a fim de tornar dinâmica a execução em qualquer ambiente.
+4. Fazer um guia passo a passo para execução do programa (local dos diretorios, listagem dinâmica, execução com o SO, etc). 
+
+---
+
 ## O que foi feito até agora?
 
 Para atender à demanda de desempenho em jogos e modelos de IA, foi necessário substituir a BIOS padrão por uma variante semelhante que permitisse o controle dos clocks, algo que estava bloqueado pela configuração original da placa.

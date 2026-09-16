@@ -1,23 +1,43 @@
 #!/bin/bash
-# Acorda a GPU do suspend
-echo "on" | sudo tee /sys/bus/pci/devices/0000:03:00.0/power/control > /dev/null
-sleep 5
+# Otimização de Clocks AMDGPU para LLMs - TN02 Server
 
-# Modo manual (permite alteração dos valores a seguir)
-echo "manual" | sudo tee /sys/class/drm/card1/device/power_dpm_force_performance_level > /dev/null
+# 1. Boa Prática: Garantir que o script seja executado como root
+if [ "$EUID" -ne 0 ]; then
+  echo "Erro: Este script precisa ser executado como root (use sudo)."
+  exit 1
+fi
 
-# SCLK: mínimo 500MHz, máximo 2300MHz
-echo "s 0 500" | sudo tee /sys/class/drm/card1/device/pp_od_clk_voltage > /dev/null
-echo "s 1 2300" | sudo tee /sys/class/drm/card1/device/pp_od_clk_voltage > /dev/null
+# 2. Varredura Dinâmica Segura: Encontra o dispositivo carregado com o driver 'amdgpu'
+DEVICE_DIR=$(grep -l "amdgpu" /sys/class/drm/card*/device/uevent 2>/dev/null | sed 's|/uevent||' | head -n 1)
 
-# MCLK: 1750MHz conforme .mpt
-echo "m 1 1750" | sudo tee /sys/class/drm/card1/device/pp_od_clk_voltage > /dev/null
+if [ -z "$DEVICE_DIR" ]; then
+    echo "Erro: Nenhuma GPU AMD encontrada no sistema."
+    exit 1
+fi
 
-# Aplica as configurações
-echo "c" | sudo tee /sys/class/drm/card1/device/pp_od_clk_voltage > /dev/null
+echo "GPU AMD localizada dinamicamente em: $DEVICE_DIR"
 
-# Força nível máximo
-echo "1" | sudo tee /sys/class/drm/card1/device/pp_dpm_sclk > /dev/null
+# 3. Preparação: Acorda a GPU e força o modo manual
+echo "on" > "$DEVICE_DIR/power/control"
+sleep 2
+echo "manual" > "$DEVICE_DIR/power_dpm_force_performance_level"
 
-# Mantém GPU acordada
-echo "on" | sudo tee /sys/bus/pci/devices/0000:03:00.0/power/control > /dev/null
+# 4. Aplicação de Clocks (.mpt base)
+echo "s 0 500" > "$DEVICE_DIR/pp_od_clk_voltage"
+echo "s 1 2300" > "$DEVICE_DIR/pp_od_clk_voltage"
+echo "m 1 875" > "$DEVICE_DIR/pp_od_clk_voltage"
+
+# Efetiva as alterações no firmware (Commit)
+echo "c" > "$DEVICE_DIR/pp_od_clk_voltage"
+
+# 5. Força o estado DPM mais alto
+echo "1" > "$DEVICE_DIR/pp_dpm_sclk"
+
+# 6. Otimização Extra: Ativa o perfil Compute se disponível no driver
+if grep -q "COMPUTE" "$DEVICE_DIR/pp_power_profile_mode"; then
+    COMPUTE_INDEX=$(grep "COMPUTE" "$DEVICE_DIR/pp_power_profile_mode" | awk '{print $1}')
+    echo "$COMPUTE_INDEX" > "$DEVICE_DIR/pp_power_profile_mode"
+    echo "Perfil COMPUTE ativado."
+fi
+
+echo "Clocks e estado de performance aplicados com sucesso para o Ollama!"

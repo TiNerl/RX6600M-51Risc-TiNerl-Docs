@@ -75,7 +75,7 @@ ls /sys/class/drm
 Planejo organizar e documentar as três principais variantes relevantes para o caso:
 
 - RX6600M 51Risc rev 1.0;
-- RX6600M 51Risc rev 2.0 (sem PWM da ventoinha);
+- RX6600M 51Risc Rev 3.0 (sem PWM da ventoinha);
 - RX6600 Pulse da AMD/Sapphire (ATUAL);
 
 Além disso, o projeto pretende detalhar no futuro:
